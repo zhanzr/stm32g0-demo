@@ -432,6 +432,11 @@
               <FileType>1</FileType>
               <FilePath>../Core/Src/stm32g0xx_hal_msp.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32_mpu.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\stm32_mpu.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -576,6 +581,26 @@
               <FileName>asm_test_4.s</FileName>
               <FileType>2</FileType>
               <FilePath>..\Core\Src\asm_test_4.s</FilePath>
+            </File>
+            <File>
+              <FileName>asm_test_5.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\Core\Src\asm_test_5.s</FilePath>
+            </File>
+            <File>
+              <FileName>asm_test_6.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\Core\Src\asm_test_6.s</FilePath>
+            </File>
+            <File>
+              <FileName>asm_test_7.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\Core\Src\asm_test_7.s</FilePath>
+            </File>
+            <File>
+              <FileName>asm_test_8.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\Core\Src\asm_test_8.s</FilePath>
             </File>
           </Files>
         </Group>

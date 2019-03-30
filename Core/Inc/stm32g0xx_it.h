@@ -49,7 +49,7 @@
 /* Exported functions prototypes ---------------------------------------------*/
 void NMI_Handler(void);
 void HardFault_Handler(void);
-void SVC_Handler(void);
+void SVC_Handler(uint32_t input);
 void PendSV_Handler(void);
 void SysTick_Handler(void);
 void DMA1_Channel1_IRQHandler(void);

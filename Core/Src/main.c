@@ -32,6 +32,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "asm_prototype.h"
+#include "stm32_mpu.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -64,17 +65,14 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 #if defined(__ARMCC_VERSION)
-int stdout_putchar (int ch)
-{
+int stdout_putchar (int ch) {
 	uint8_t c = ch;
 	HAL_UART_Transmit(&huart2, &c, 1, 1);
 	return ch;
 }
 #else
-int _write (int fd, const void *buf, size_t count)
-{
-	for(uint32_t i=0; i<count; ++i)
-	{
+int _write (int fd, const void *buf, size_t count) {
+	for(uint32_t i=0; i<count; ++i) {
 		HAL_UART_Transmit(&huart2, buf+i, 1, 1);
 	}
 	return count;
@@ -83,21 +81,12 @@ int _write (int fd, const void *buf, size_t count)
 
 volatile uint16_t g_adc_buf[3];
 
-uint32_t g_msp_val[3];
-uint32_t g_psp_val[3];
-uint32_t g_lr_val[3];
+#define SP_PROCESS                  0x02   /* Process stack */
+#define SP_MAIN                     0x00   /* Main stack */
+#define THREAD_MODE_PRIVILEGED      0x00   /* Thread mode has privileged access */
+#define THREAD_MODE_UNPRIVILEGED    0x01   /* Thread mode has unprivileged access */
 
-//__STATIC_INLINE uint32_t __get_LR(void) {
-//  register uint32_t __regLinkReg     __ASM("lr");
-//  return(__regLinkReg);
-//}
-
-static inline void test_func1(void) {
-	g_msp_val[1] = __get_MSP();
-	g_psp_val[1] = __get_PSP();
-//	g_lr_val[1] = __get_LR();
-	g_lr_val[1] = asm_get_lr();
-}
+extern uint8_t PrivilegedReadOnlyArray[32];
 
 /* USER CODE END 0 */
 
@@ -134,8 +123,19 @@ int main(void)
   MX_CRC_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+  /* Set MPU regions */
+  MPU_Config();
+  MPU_AccessPermConfig();	
+		
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)g_adc_buf, sizeof(g_adc_buf)/sizeof(g_adc_buf[0]));
 	printf("Clock:%u Hz\n", SystemCoreClock);
+	
+  /* Switch Thread mode from privileged to unprivileged ------------------------*/
+  /* Thread mode has unprivileged access */
+  __set_CONTROL(THREAD_MODE_UNPRIVILEGED | SP_MAIN);  
+  /* Execute ISB instruction to flush pipeline as recommended by Arm */
+  __ISB(); 
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -145,20 +145,15 @@ int main(void)
 		printf("ADC:%u %u %u\n", g_adc_buf[0], (g_adc_buf[1]*3300)/4095, (g_adc_buf[2]*3300)/4095);
 		HAL_Delay(1000);
 		
-		g_msp_val[0] = __get_MSP();
-		g_psp_val[0] = __get_PSP();
-//		g_lr_val[0] = __get_LR();
-		g_lr_val[0] = asm_get_lr();
-		test_func1();
-		g_msp_val[2] = __get_MSP();
-		g_psp_val[2] = __get_PSP();
-//		g_lr_val[2] = __get_LR();
-		g_lr_val[2] = asm_get_lr();
+		printf("%s %u\n", __func__, __LINE__);
+		printf("%s %u %02X\n", __func__, __LINE__, PrivilegedReadOnlyArray[0]);
 
-		printf("%08X %08X %08X\t%08X %08X %08X\n",
-		g_msp_val[0], g_msp_val[1], g_msp_val[2],
-		g_lr_val[0], g_lr_val[1], g_lr_val[2]);
-		
+		asm_svc_2(HAL_GetTick());		
+		printf("%s %u %02X\n", __func__, __LINE__, PrivilegedReadOnlyArray[0]);
+
+		PrivilegedReadOnlyArray[0] = (uint8_t)HAL_GetTick();
+		printf("%s %u %02X\n", __func__, __LINE__, PrivilegedReadOnlyArray[0]);
+
 		HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
     /* USER CODE END WHILE */
 

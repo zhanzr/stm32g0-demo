@@ -23,6 +23,7 @@
 #include "stm32g0xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,6 +62,8 @@ extern DMA_HandleTypeDef hdma_usart2_rx;
 extern DMA_HandleTypeDef hdma_usart2_tx;
 /* USER CODE BEGIN EV */
 
+extern uint8_t PrivilegedReadOnlyArray[32];
+
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -85,7 +88,7 @@ void NMI_Handler(void)
 void HardFault_Handler(void)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
-
+	printf("%s\n", __func__);
   /* USER CODE END HardFault_IRQn 0 */
   while (1)
   {
@@ -97,9 +100,10 @@ void HardFault_Handler(void)
 /**
   * @brief This function handles System service call via SWI instruction.
   */
-void SVC_Handler(void)
+void SVC_Handler(uint32_t input)
 {
   /* USER CODE BEGIN SVC_IRQn 0 */
+		PrivilegedReadOnlyArray[0] = (uint8_t)input;
 
   /* USER CODE END SVC_IRQn 0 */
   /* USER CODE BEGIN SVC_IRQn 1 */
